@@ -11,3 +11,9 @@ def kwik_video(url: Union[str, None] = None):
         return {"error": "url is required"}
 
     return {"url": get_video(url)}
+
+
+if __name__ == "__main__":
+    import uvicorn
+
+    uvicorn.run(app, host="0.0.0.0", port=5000, log_level="debug")

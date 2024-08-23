@@ -1,6 +1,14 @@
 import requests
 import re
 
+import logging
+
+logging.basicConfig(
+    level=logging.DEBUG,
+    format="%(asctime)s - %(levelname)s - %(message)s",
+)
+
+logger = logging.getLogger(__name__)
 
 USER_AGENT = "Googlebot/2.1 (+http://www.google.com/bot.html)"
 
@@ -56,12 +64,21 @@ def parser(res):
 
 def get_video(url):
     host = get_host_url(url)
+    logger.debug(f"url: {url}, host: {host}")
     headers = {"referer": f"{host}/", "origin": host, "user-agent": USER_AGENT}
 
     session = requests.Session()
 
     f1 = session.get(url, headers=headers)
+    logger.debug("kwik downloadpage")
+    logger.debug(f"headers: {f1.headers}")
+    logger.debug(f"statuscode: {f1.status_code}")
+
+    if f1.status_code != 200:
+        raise Exception("kwik downloadpage error")
+
     key, url = parser(f1)
+    logger.debug(f"parsed key: {key}, url: {url}")
 
     f2 = session.post(
         url,
@@ -69,5 +86,12 @@ def get_video(url):
         headers={"Referer": url, "user-agent": USER_AGENT},
         allow_redirects=False,
     )
+
+    logger.debug("kwik post request download")
+    logger.debug(f"headers: {f2.headers}")
+    logger.debug(f"statuscode: {f2.status_code}")
+
+    if f2.status_code != 302:
+        raise Exception("kwik post request error")
 
     return f2.headers.get("Location")
